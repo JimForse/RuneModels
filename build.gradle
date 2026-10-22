@@ -4,6 +4,14 @@ plugins {
 }
 
 repositories {
+	maven {
+		name = 'GeckoLib'
+		url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+		content {
+			includeGroupByRegex("software\\.bernie.*")
+			includeGroup("com.eliotlash.mclib")
+		}
+	}
 }
 
 loom {
@@ -17,20 +25,14 @@ loom {
 	}
 }
 
-fabricApi {
-	configureDataGeneration {
-		client = true
-		modId = "runemodels"
-	}
-}
-
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	modImplementation files('libs/geckolib-fabric-1.20.1-4.7.2.jar')
+	modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
+	implementation "com.eliotlash.mclib:mclib:20"
 }
 
 processResources {

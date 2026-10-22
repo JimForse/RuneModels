@@ -3,15 +3,15 @@
 	"id": "runemodels",
 	"version": "${version}",
 	"name": "RuneModels",
-	"description": "This mod created specially for the project AxoRune",
+	"description": "This mod created specially for the project AxoRune and for free use",
 	"authors": [
 		"The Protocol Studio [TPS]"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/JimForse/RuneModels",
+		"sources": "https://github.com/JimForse/RuneModels"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/runemodels/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -20,9 +20,6 @@
 		],
 		"client": [
 			"rw.modden.client.RuneModelsClient"
-		],
-		"fabric-datagen": [
-			"rw.modden.client.RuneModelsDataGenerator"
 		]
 	},
 	"mixins": [
@@ -37,6 +34,6 @@
 		"minecraft": "~1.20.1",
 		"java": ">=17",
 		"fabric-api": "*",
-		"geckolib": "*"
+		"geckolib": ">=4.7"
 	}
 }
