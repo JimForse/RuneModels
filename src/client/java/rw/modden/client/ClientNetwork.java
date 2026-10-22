@@ -14,10 +14,10 @@ public final class ClientNetwork {
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(ProfileSync.PROFILE, (client, handler, buf, sender) -> {
             int id = buf.readVarInt();
-            String model = buf.readString(), texture = buf.readString(), set = buf.readString();
+            String name = buf.readString(), model = buf.readString(), texture = buf.readString(), set = buf.readString();
             client.execute(() -> {
-                if (model.isEmpty() && texture.isEmpty()) ClientProfiles.clear(id);
-                else ClientProfiles.set(id, new Profile(blankToNull(model), blankToNull(texture), blankToNull(set)));
+                if (name.isEmpty() && model.isEmpty() && texture.isEmpty()) ClientProfiles.clear(id);
+                else ClientProfiles.set(id, new Profile(blankToNull(name), blankToNull(model), blankToNull(texture), blankToNull(set)));
             });
         });
 

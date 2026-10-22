@@ -17,24 +17,31 @@ public final class ProfileTags {
     private static String encode(String name) { return name.toLowerCase().replace(':', '+'); }
     private static String decode(String part) { return part.replace('+', ':'); }
 
-    /** null, if the entity has neither a model nor a texture */
+    /** null, if the entity has neither a name, nor a model, nor a texture (an animation set alone is not a profile) */
     public static Profile read(Entity entity) {
-        String model = null, texture = null, set = null;
+        Profile p = readAll(entity);
+        return p.name() == null && p.model() == null && p.texture() == null?null:p;
+    }
+
+    public static Profile readAll(Entity entity) {
+        String name = null, model = null, texture = null, set = null;
         for (String tag: entity.getCommandTags()) {
+            if (!tag.startsWith(PREFIX)) continue;
             if (tag.startsWith(MODEL)) model = decode(tag.substring(MODEL.length()));
             else if (tag.startsWith(TEXTURE)) texture = decode(tag.substring(TEXTURE.length()));
             else if (tag.startsWith(SET)) set = tag.substring(SET.length());
+            else name = decode(tag.substring(PREFIX.length()));
         }
-        return model == null && texture == null?null:new Profile(model, texture, set);
+        return new Profile(name, model, texture, set);
     }
 
     /** Replaces all profile tags. Must be called within ProfileSync.silently(...) */
     public static void write(Entity entity, Profile p) {
         for (String tag: new ArrayList<>(entity.getCommandTags())) {
-            if (tag.startsWith(MODEL) || tag.startsWith(TEXTURE) || tag.startsWith(SET))
-                entity.removeScoreboardTag(tag);
+            if (tag.startsWith(PREFIX)) entity.removeScoreboardTag(tag);
         }
         if (p == null) return;
+        if (p.name() != null) entity.addCommandTag(PREFIX + encode(p.name()));
         if (p.model() != null) entity.addCommandTag(MODEL + encode(p.model()));
         if (p.texture() != null) entity.addCommandTag(TEXTURE + encode(p.texture()));
         if (p.animations() != null) entity.addCommandTag(SET + p.animations());

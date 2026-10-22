@@ -2,6 +2,7 @@ package rw.modden.profile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -29,6 +30,7 @@ public final class AnimationSets {
         return list != null && list.remove(anim);
     }
     public static boolean exists(String set) { return SETS.containsKey(set); }
+    public static Set<String> names() { return SETS.keySet(); }
 
     /** What constitutes a "standard" set? It is defined externally (via a file or API), not in the code */
     public static void setDefaultSet(String set) { defaultSet = set; }

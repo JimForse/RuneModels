@@ -18,6 +18,7 @@ public class EntityRenderer extends GeoReplacedEntityRenderer<Entity, Animatable
     private EntityRenderer(EntityRendererFactory.Context ctx, GeoModel model) {
         super(ctx, model, new Animatable(model));
         this.runeModel = model;
+        addRenderLayer(new HeldItemLayer(this));
     }
 
     @Override

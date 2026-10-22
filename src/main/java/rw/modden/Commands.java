@@ -3,16 +3,21 @@ package rw.modden;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.suggestion.SuggestionProviders;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import rw.modden.api.PlayMode;
 import rw.modden.api.RuneModelsApi;
+import rw.modden.profile.AnimationSets;
 import rw.modden.profile.Names;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
+import static com.mojang.brigadier.arguments.StringArgumentType.word;
 import static net.minecraft.command.argument.EntityArgumentType.entities;
 import static net.minecraft.command.argument.EntityArgumentType.getEntities;
 import static net.minecraft.server.command.CommandManager.argument;
@@ -23,6 +28,9 @@ public final class Commands {
             Text.literal("Invalid name: use a-z, 0-9, _ (write other namespaces in quotes: \"mymod:name\")"));
     private static final SimpleCommandExceptionType NOTHING = new SimpleCommandExceptionType(
             Text.literal("Nothing changed (no targets, or the entity has no model for this action)"));
+    /** Computed on the client from its own animation_sets.json, so it also works on a dedicated server */
+    private static final SuggestionProvider<ServerCommandSource> ANIMATION_SETS = SuggestionProviders.register(
+            RuneModels.id("animation_sets"), (c, builder) -> CommandSource.suggestMatching(AnimationSets.names(), builder));
 
     private Commands() {}
 
@@ -30,12 +38,17 @@ public final class Commands {
         CommandRegistrationCallback.EVENT.register((dispatcher, access, env) -> dispatcher.register(
                 literal("runemodels").requires(s -> s.hasPermissionLevel(2))
                         .then(literal("set").then(argument("targets", entities())
-                                .then(argument("model", string()).then(argument("texture", string())
-                                        .executes(c -> set(c, null))
-                                        .then(argument("animations", string())
-                                                .executes(c -> set(c, getString(c, "animations"))))))))
-                        .then(literal("texture").then(argument("targets", entities())
-                                .then(argument("texture", string()).executes(Commands::texture))))
+                                .then(literal("model").then(argument("model", string())
+                                        .executes(c -> model(c, false))
+                                        .then(argument("texture", string()).executes(c -> model(c, true)))))
+                                .then(literal("texture").then(argument("texture", string()).executes(Commands::texture)))
+                                .then(argument("name", string()).executes(Commands::name))))
+                        .then(literal("animlist")
+                                .then(literal("set").then(argument("targets", entities())
+                                        .then(argument("set", word()).suggests(ANIMATION_SETS)
+                                                .executes(c -> animations(c, getString(c, "set"))))))
+                                .then(literal("remove").then(argument("targets", entities())
+                                        .executes(c -> animations(c, null)))))
                         .then(literal("clear").then(argument("targets", entities()).executes(Commands::clear)))
                         .then(literal("play").then(argument("targets", entities())
                                 .then(argument("animation", string())
@@ -46,11 +59,20 @@ public final class Commands {
                         .then(literal("stop").then(argument("targets", entities()).executes(Commands::stop)))));
     }
 
-    private static int set(CommandContext<ServerCommandSource> c, String set) throws CommandSyntaxException {
-        String model = getString(c, "model"), texture = getString(c, "texture");
-        if (Names.parse(model) == null || Names.parse(texture) == null) throw BAD_NAME.create();
+    private static int name(CommandContext<ServerCommandSource> c) throws CommandSyntaxException {
+        String name = getString(c, "name");
+        if (Names.parse(name) == null) throw BAD_NAME.create();
         int n = 0;
-        for (Entity e: getEntities(c, "targets")) if (RuneModelsApi.setModel(e, model, texture, set)) n++;
+        for (Entity e: getEntities(c, "targets")) if (RuneModelsApi.apply(e, name)) n++;
+        return done(c, n, "Profile applied to");
+    }
+
+    private static int model(CommandContext<ServerCommandSource> c, boolean withTexture) throws CommandSyntaxException {
+        String model = getString(c, "model");
+        String texture = withTexture?getString(c, "texture"):null;
+        if (Names.parse(model) == null || withTexture && Names.parse(texture) == null) throw BAD_NAME.create();
+        int n = 0;
+        for (Entity e: getEntities(c, "targets")) if (RuneModelsApi.setModel(e, model, texture)) n++;
         return done(c, n, "Model applied to");
     }
 
@@ -60,6 +82,12 @@ public final class Commands {
         int n = 0;
         for (Entity e: getEntities(c, "targets")) if (RuneModelsApi.setTexture(e, texture)) n++;
         return done(c, n, "Texture applied to");
+    }
+
+    private static int animations(CommandContext<ServerCommandSource> c, String set) throws CommandSyntaxException {
+        int n = 0;
+        for (Entity e: getEntities(c, "targets")) if (RuneModelsApi.setAnimationSet(e, set)) n++;
+        return done(c, n, set == null?"Animation set removed from":"Animation set applied to");
     }
 
     private static int clear(CommandContext<ServerCommandSource> c) throws CommandSyntaxException {

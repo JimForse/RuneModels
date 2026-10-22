@@ -6,7 +6,8 @@
 		"ResourcePackManagerMixin",
 		"EntityRenderersMixin",
 		"EntityRenderDispatcherMixin",
-		"LivingEntityRendererMixin"
+		"LivingEntityRendererMixin",
+		"PlayerEntityRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

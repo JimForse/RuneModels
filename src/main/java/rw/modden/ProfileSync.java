@@ -72,13 +72,17 @@ public final class ProfileSync {
 
     /** profile == null means "remove the profile" */
     private static void sendProfile(ServerPlayerEntity player, Entity entity, Profile profile) {
+        Profile p = profile == null?Profile.EMPTY:profile;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarInt(entity.getId());
-        buf.writeString(profile == null || profile.model() == null?"":profile.model());
-        buf.writeString(profile == null || profile.texture() == null?"":profile.texture());
-        buf.writeString(profile == null || profile.animations() == null?"":profile.animations());
+        buf.writeString(orEmpty(p.name()));
+        buf.writeString(orEmpty(p.model()));
+        buf.writeString(orEmpty(p.texture()));
+        buf.writeString(orEmpty(p.animations()));
         ServerPlayNetworking.send(player, PROFILE, buf);
     }
+
+    private static String orEmpty(String s) { return s == null?"":s; }
 
     private static List<ServerPlayerEntity> audience(Entity entity) {
         List<ServerPlayerEntity> list = new ArrayList<>(PlayerLookup.tracking(entity));

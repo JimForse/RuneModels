@@ -12,18 +12,36 @@ import software.bernie.geckolib.loading.object.BakedAnimations;
 import net.minecraft.util.Identifier;
 
 import java.util.Arrays;
+import java.util.function.UnaryOperator;
 
 /** Public client API. For client-side code only (src/client) */
 public final class ClientApi {
     private ClientApi() {}
 
-    /** Model + mandatory texture + optional set of animations (null = no animations) */
-    public static boolean setModel(Entity entity, String model, String texture, String animationSet) {
-        return ClientProfiles.set(entity.getId(), new Profile(model, texture, animationSet));
+    /** Everything by one name: the texture, plus the model if such a file exists */
+    public static boolean apply(Entity entity, String name) {
+        return update(entity, p -> new Profile(name, null, null, p.animations()));
+    }
+    /** Model and the texture of the same name */
+    public static boolean setModel(Entity entity, String model) {
+        return setModel(entity, model, null);
+    }
+    /** Model with a texture of another name. texture == null means the texture of the same name as the model */
+    public static boolean setModel(Entity entity, String model, String texture) {
+        return update(entity, p -> new Profile(null, model, texture, p.animations()));
     }
     /** Texture only: vanilla model and vanilla animations */
     public static boolean setTexture(Entity entity, String texture) {
-        return ClientProfiles.set(entity.getId(), new Profile(null, texture, null));
+        return update(entity, p -> new Profile(null, null, texture, p.animations()));
+    }
+    /** Animation set. null removes it. The model and texture are not touched */
+    public static boolean setAnimationSet(Entity entity, String set) {
+        return update(entity, p -> new Profile(p.name(), p.model(), p.texture(), set));
+    }
+
+    private static boolean update(Entity entity, UnaryOperator<Profile> change) {
+        Profile current = ClientProfiles.getRaw(entity.getId());
+        return ClientProfiles.set(entity.getId(), change.apply(current == null?Profile.EMPTY:current));
     }
 
     public static void clear(Entity entity) {
