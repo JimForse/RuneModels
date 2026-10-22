@@ -7,7 +7,11 @@
 		"EntityRenderersMixin",
 		"EntityRenderDispatcherMixin",
 		"LivingEntityRendererMixin",
-		"PlayerEntityRendererMixin"
+		"PlayerEntityRendererMixin",
+		"ModelPartMixin",
+		"RendererInvokers$Living",
+		"RendererInvokers$Player",
+		"RendererInvokers$Animal"
 	],
 	"injectors": {
 		"defaultRequire": 1

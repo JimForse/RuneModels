@@ -17,8 +17,6 @@ import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.cache.object.GeoCube;
 import software.bernie.geckolib.core.state.BoneSnapshot;
 
-import java.util.List;
-
 /** Draws the arm bone of the profile's geo model in place of the vanilla first-person arm */
 public final class FirstPersonArm {
     private FirstPersonArm() {}
@@ -36,7 +34,7 @@ public final class FirstPersonArm {
         BakedGeoModel model = GeckoLibCache.getBakedModels().get(Names.model(profile.model()));
         if (renderer == null || model == null) return false;
 
-        GeoBone bone = find(model.topLevelBones(), right?"rightarm":"leftarm");
+        GeoBone bone = Bones.find(model.topLevelBones(), right?Bones.RIGHT_ARM:Bones.LEFT_ARM);
         if (bone == null) return false;
 
         Identifier texture = Names.texture(profile.texture());
@@ -50,15 +48,6 @@ public final class FirstPersonArm {
         renderAtRest(renderer, bone, matrices, buffer, light);
         matrices.pop();
         return true;
-    }
-
-    private static GeoBone find(List<GeoBone> bones, String name) {
-        for (GeoBone bone: bones) {
-            if (bone.getName().replace("_", "").equalsIgnoreCase(name)) return bone;
-            GeoBone found = find(bone.getChildBones(), name);
-            if (found != null) return found;
-        }
-        return null;
     }
 
     /** The bone and its children in the pose from the model file, ignoring the current animation */
