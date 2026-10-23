@@ -63,7 +63,7 @@ public final class ProfileValidator {
             if (!GeckoLibCache.getBakedModels().containsKey(geo)) return fail(raw, "model file not found or invalid: " + geo);
 
             if (p.animations() != null) {
-                if (!AnimationSets.exists(p.animations()))
+                if (!AnimationSets.exists(p.animations()) && !Profile.NO_ANIMATIONS.equals(p.animations()))
                     RuneModels.LOGGER.warn("RuneModels: {} - animation set '{}' does not exist, model will not animate", raw, p.animations());
                 Identifier anim = Names.animation(p.model());
                 if (!GeckoLibCache.getBakedAnimations().containsKey(anim))

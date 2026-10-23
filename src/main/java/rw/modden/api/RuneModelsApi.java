@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 /**
  * Public server-side API. Each method returns false if it performed no action.
- * apply / setModel / setTexture replace the look of the entity but keep its animation set
+ * setModel / setTexture replace the look of the entity but keep its animation set; apply replaces everything
  */
 public final class RuneModelsApi {
     // Set names keep their case: they must match the names in animation_sets.json exactly
@@ -22,7 +22,7 @@ public final class RuneModelsApi {
     /** Everything by one name (tag runemodels.<name>): the texture, plus the model if such a file exists on the client */
     public static boolean apply(Entity entity, String name) {
         if (isClient(entity) || Names.parse(name) == null || ProfileTags.isReserved(name)) return false;
-        update(entity, p -> new Profile(name, null, null, p.animations()));
+        update(entity, p -> new Profile(name, null, null, null));
         return true;
     }
 
@@ -45,7 +45,10 @@ public final class RuneModelsApi {
         return true;
     }
 
-    /** Animation set (tag runemodels.set.<set>). null removes it. The model and texture are not touched */
+    /**
+     * Animation set (tag runemodels.set.<set>). null means the default animations, Profile.NO_ANIMATIONS - vanilla ones only.
+     * The model and texture are not touched
+     */
     public static boolean setAnimationSet(Entity entity, String set) {
         if (isClient(entity) || set != null && !SET_NAME.matcher(set).matches()) return false;
         update(entity, p -> new Profile(p.name(), p.model(), p.texture(), set));

@@ -19,7 +19,7 @@ This mod includes the following server commands:
 2. /runemodels set 'targets' model 'model' ['texture']   (model; the texture of the same name if not given; vanilla animations)
 3. /runemodels set 'targets' texture 'texture'           (texture only, uses the vanilla model)
 4. /runemodels animlist set 'targets' 'animation_set'
-5. /runemodels animlist remove 'targets'
+5. /runemodels animlist remove 'targets'                 (no custom animations: vanilla ones only)
 6. /runemodels clear 'targets'
 7. /runemodels play 'targets' 'animation' [loop|once|hold]
 8. /runemodels stop 'targets'
@@ -27,7 +27,7 @@ This mod includes the following server commands:
 And one client command:
 - /rmlist - loaded models; /rmlist 'model' - animations of that model.
 
-`set` and `texture` keep the animation set already given to the entity; `clear` removes everything.
+`set model` and `set texture` keep the animation set already given to the entity; `set 'name'` brings back the model's own animations; `clear` removes everything.
 The commands only write entity tags (`runemodels.<name>`, `runemodels.model.<x>`, `runemodels.texture.<y>`, `runemodels.set.<s>`), so the same tags can also be given with `/tag`.
 
 ## Servers

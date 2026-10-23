@@ -14,6 +14,7 @@ import rw.modden.api.PlayMode;
 import rw.modden.api.RuneModelsApi;
 import rw.modden.profile.AnimationSets;
 import rw.modden.profile.Names;
+import rw.modden.profile.Profile;
 import rw.modden.profile.ProfileTags;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
@@ -51,7 +52,7 @@ public final class Commands {
                                         .then(argument("set", word()).suggests(ANIMATION_SETS)
                                                 .executes(c -> animations(c, getString(c, "set"))))))
                                 .then(literal("remove").then(argument("targets", entities())
-                                        .executes(c -> animations(c, null)))))
+                                        .executes(c -> animations(c, Profile.NO_ANIMATIONS)))))
                         .then(literal("clear").then(argument("targets", entities()).executes(Commands::clear)))
                         .then(literal("play").then(argument("targets", entities())
                                 .then(argument("animation", string())
@@ -91,7 +92,7 @@ public final class Commands {
     private static int animations(CommandContext<ServerCommandSource> c, String set) throws CommandSyntaxException {
         int n = 0;
         for (Entity e: getEntities(c, "targets")) if (RuneModelsApi.setAnimationSet(e, set)) n++;
-        return done(c, n, set == null?"Animation set removed from":"Animation set applied to");
+        return done(c, n, Profile.NO_ANIMATIONS.equals(set)?"Custom animations removed from":"Animation set applied to");
     }
 
     private static int clear(CommandContext<ServerCommandSource> c) throws CommandSyntaxException {

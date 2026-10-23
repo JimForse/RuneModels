@@ -6,4 +6,6 @@ package rw.modden.profile;
  */
 public record Profile(String name, String model, String texture, String animations) {
     public static final Profile EMPTY = new Profile(null, null, null, null);
+    /** Animation set meaning "no custom animations at all": only vanilla ones, even for a model with its own animation file */
+    public static final String NO_ANIMATIONS = "none";
 }

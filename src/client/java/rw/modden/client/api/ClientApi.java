@@ -20,7 +20,7 @@ public final class ClientApi {
 
     /** Everything by one name: the texture, plus the model if such a file exists */
     public static boolean apply(Entity entity, String name) {
-        return update(entity, p -> new Profile(name, null, null, p.animations()));
+        return update(entity, p -> new Profile(name, null, null, null));
     }
     /** Model and the texture of the same name */
     public static boolean setModel(Entity entity, String model) {
