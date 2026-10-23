@@ -6,6 +6,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Animation sets are used by the client: they come from animation_sets.json or from client-side code.
+ * Sets created on a dedicated server are not sent to the players
+ */
 public final class AnimationSets {
     private static final Map<String, Map<String, List<String>>> SETS = new ConcurrentHashMap<>();
     private static volatile String defaultSet = null;

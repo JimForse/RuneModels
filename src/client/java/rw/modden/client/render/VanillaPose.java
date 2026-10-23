@@ -10,10 +10,12 @@ import net.minecraft.client.render.entity.model.AnimalModel;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.SinglePartEntityModel;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
+import rw.modden.RuneModels;
 import rw.modden.client.mixin.RendererInvokers;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
@@ -23,17 +25,29 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** The vanilla pose of an entity, taken from its own vanilla model and copied onto the geo bones with the same names */
 public final class VanillaPose {
+    private static final Set<EntityType<?>> FAILED = ConcurrentHashMap.newKeySet();
+
     private VanillaPose() {}
 
     /** Bones moved by the current custom animation are skipped: the custom animation wins */
     @SuppressWarnings("unchecked")
     public static void apply(LivingEntity entity, float tickDelta, BakedGeoModel model, Set<String> animated) {
+        if (FAILED.contains(entity.getType())) return;
         if (!(MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(entity) instanceof LivingEntityRenderer<?, ?> renderer)) return;
         EntityModel<LivingEntity> vanilla = (EntityModel<LivingEntity>) renderer.getModel();
-        pose(renderer, vanilla, entity, tickDelta);
+        try {
+            pose(renderer, vanilla, entity, tickDelta);
+        } catch (RuntimeException e) {
+            // A model from another mod may expect to be posed only by its own renderer: then that type keeps its custom pose only
+            FAILED.add(entity.getType());
+            RuneModels.LOGGER.warn("RuneModels: cannot take the vanilla pose of {}, its model will not follow vanilla animations",
+                    entity.getType(), e);
+            return;
+        }
         Set<String> actions = actionParts(vanilla, entity);
         for (ModelPart part: parts(vanilla)) {
             String name = PartNames.get(part);

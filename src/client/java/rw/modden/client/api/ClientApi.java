@@ -66,7 +66,7 @@ public final class ClientApi {
         return true;
     }
 
-    /** Capture the requested animation (required for looped animations) */
+    /** Stops the animation started with playAnimation (looped ones never stop by themselves) */
     public static void stopAnimation(Entity entity) {
         ClientProfiles.clearPlay(entity.getId());
     }

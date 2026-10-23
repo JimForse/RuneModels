@@ -14,13 +14,14 @@ import java.util.regex.Pattern;
  * apply / setModel / setTexture replace the look of the entity but keep its animation set
  */
 public final class RuneModelsApi {
-    private static final Pattern SET_NAME = Pattern.compile("[a-z0-9_.\\-]+");
+    // Set names keep their case: they must match the names in animation_sets.json exactly
+    private static final Pattern SET_NAME = Pattern.compile("[A-Za-z0-9_.+\\-]+");
 
     private RuneModelsApi() {}
 
     /** Everything by one name (tag runemodels.<name>): the texture, plus the model if such a file exists on the client */
     public static boolean apply(Entity entity, String name) {
-        if (isClient(entity) || Names.parse(name) == null) return false;
+        if (isClient(entity) || Names.parse(name) == null || ProfileTags.isReserved(name)) return false;
         update(entity, p -> new Profile(name, null, null, p.animations()));
         return true;
     }
@@ -46,9 +47,8 @@ public final class RuneModelsApi {
 
     /** Animation set (tag runemodels.set.<set>). null removes it. The model and texture are not touched */
     public static boolean setAnimationSet(Entity entity, String set) {
-        String s = set == null?null:set.toLowerCase();
-        if (isClient(entity) || s != null && !SET_NAME.matcher(s).matches()) return false;
-        update(entity, p -> new Profile(p.name(), p.model(), p.texture(), s));
+        if (isClient(entity) || set != null && !SET_NAME.matcher(set).matches()) return false;
+        update(entity, p -> new Profile(p.name(), p.model(), p.texture(), set));
         return true;
     }
 

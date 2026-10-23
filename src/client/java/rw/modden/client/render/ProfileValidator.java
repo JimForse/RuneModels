@@ -14,11 +14,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class ProfileValidator {
     private static final Map<Profile, Optional<Profile>> CACHE = new ConcurrentHashMap<>();
+    private static Map<?, ?> checkedWith;
 
     private ProfileValidator() {}
 
-    /** The profile as it will be drawn: model and texture filled in from the name. null = cannot be drawn */
+    /**
+     * The profile as it will be drawn: model and texture filled in from the name. null = cannot be drawn.
+     * GeckoLib replaces its model table on every resource reload: a new table means the files may have changed,
+     * so everything is checked again (otherwise a removed model would still count as present and crash GeckoLib)
+     */
     public static Profile resolve(Profile p) {
+        Map<?, ?> models = GeckoLibCache.getBakedModels();
+        if (checkedWith != models) {
+            CACHE.clear();
+            checkedWith = models;
+        }
         return CACHE.computeIfAbsent(p, ProfileValidator::check).orElse(null);
     }
     public static void reset() {

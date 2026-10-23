@@ -17,6 +17,12 @@ public final class ProfileTags {
     private static String encode(String name) { return name.toLowerCase().replace(':', '+'); }
     private static String decode(String part) { return part.replace('+', ':'); }
 
+    /** A name like "set.x" would be stored as "runemodels.set.x" and read back as an animation set, not as a name */
+    public static boolean isReserved(String name) {
+        String n = name.toLowerCase();
+        return n.startsWith("model.") || n.startsWith("texture.") || n.startsWith("set.");
+    }
+
     /** null, if the entity has neither a name, nor a model, nor a texture (an animation set alone is not a profile) */
     public static Profile read(Entity entity) {
         Profile p = readAll(entity);

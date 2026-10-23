@@ -6,12 +6,15 @@
 		"ResourcePackManagerMixin",
 		"EntityRenderersMixin",
 		"EntityRenderDispatcherMixin",
+		"GeoReplacedEntityRendererMixin",
 		"LivingEntityRendererMixin",
 		"PlayerEntityRendererMixin",
 		"ModelPartMixin",
+		"RendererInvokers$Base",
 		"RendererInvokers$Living",
 		"RendererInvokers$Player",
-		"RendererInvokers$Animal"
+		"RendererInvokers$Animal",
+		"RendererInvokers$Stuck"
 	],
 	"injectors": {
 		"defaultRequire": 1

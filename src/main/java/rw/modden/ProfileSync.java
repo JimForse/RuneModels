@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.S2CPlayChannelEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
@@ -35,11 +36,24 @@ public final class ProfileSync {
         });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> syncSelf(handler.player));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> syncSelf(newPlayer));
+        S2CPlayChannelEvents.REGISTER.register((handler, sender, server, channels) -> {
+            if (channels.contains(PROFILE)) server.execute(() -> syncAll(handler.player));
+        });
     }
 
     private static void syncSelf(ServerPlayerEntity player) {
         Profile profile = ProfileTags.read(player);
         if (profile != null) sendProfile(player, player, profile);
+    }
+
+    /** Everything this player should know: their own profile and the profiles of all entities they already see */
+    private static void syncAll(ServerPlayerEntity player) {
+        syncSelf(player);
+        for (Entity entity: player.getServerWorld().iterateEntities()) {
+            if (entity == player || !PlayerLookup.tracking(entity).contains(player)) continue;
+            Profile profile = ProfileTags.read(entity);
+            if (profile != null) sendProfile(player, entity, profile);
+        }
     }
 
     public static void silently(Runnable action) {
@@ -62,6 +76,7 @@ public final class ProfileSync {
     /** mode == null means "stop" */
     public static void sendPlay(Entity entity, String animation, PlayMode mode) {
         for (ServerPlayerEntity player: audience(entity)) {
+            if (!ServerPlayNetworking.canSend(player, PLAY)) continue;
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeVarInt(entity.getId());
             buf.writeString(animation == null?"":animation);
@@ -72,6 +87,7 @@ public final class ProfileSync {
 
     /** profile == null means "remove the profile" */
     private static void sendProfile(ServerPlayerEntity player, Entity entity, Profile profile) {
+        if (!ServerPlayNetworking.canSend(player, PROFILE)) return;
         Profile p = profile == null?Profile.EMPTY:profile;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeVarInt(entity.getId());

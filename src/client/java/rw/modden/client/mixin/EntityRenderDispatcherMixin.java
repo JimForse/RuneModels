@@ -2,6 +2,7 @@ package rw.modden.client.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,5 +29,13 @@ public class EntityRenderDispatcherMixin {
             if (renderer != null) return renderer;
         }
         return original.call(dispatcher, entity);
+    }
+
+    /** The vanilla check first; an entity with a tall model is also drawn when only its model is on screen */
+    @WrapOperation(method = "shouldRender", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/render/entity/EntityRenderer;shouldRender(Lnet/minecraft/entity/Entity;Lnet/minecraft/client/render/Frustum;DDD)Z"))
+    private boolean runemodels$modelBounds(net.minecraft.client.render.entity.EntityRenderer<?> renderer, Entity entity, Frustum frustum,
+                                           double x, double y, double z, Operation<Boolean> original) {
+        return original.call(renderer, entity, frustum, x, y, z) || EntityRenderer.isModelVisible(entity, frustum, x, y, z);
     }
 }

@@ -14,6 +14,7 @@ import rw.modden.api.PlayMode;
 import rw.modden.api.RuneModelsApi;
 import rw.modden.profile.AnimationSets;
 import rw.modden.profile.Names;
+import rw.modden.profile.ProfileTags;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
@@ -26,6 +27,8 @@ import static net.minecraft.server.command.CommandManager.literal;
 public final class Commands {
     private static final SimpleCommandExceptionType BAD_NAME = new SimpleCommandExceptionType(
             Text.literal("Invalid name: use a-z, 0-9, _ (write other namespaces in quotes: \"mymod:name\")"));
+    private static final SimpleCommandExceptionType RESERVED = new SimpleCommandExceptionType(
+            Text.literal("Names starting with \"model.\", \"texture.\" or \"set.\" are reserved"));
     private static final SimpleCommandExceptionType NOTHING = new SimpleCommandExceptionType(
             Text.literal("Nothing changed (no targets, or the entity has no model for this action)"));
     /** Computed on the client from its own animation_sets.json, so it also works on a dedicated server */
@@ -62,6 +65,7 @@ public final class Commands {
     private static int name(CommandContext<ServerCommandSource> c) throws CommandSyntaxException {
         String name = getString(c, "name");
         if (Names.parse(name) == null) throw BAD_NAME.create();
+        if (ProfileTags.isReserved(name)) throw RESERVED.create();
         int n = 0;
         for (Entity e: getEntities(c, "targets")) if (RuneModelsApi.apply(e, name)) n++;
         return done(c, n, "Profile applied to");

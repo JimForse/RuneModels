@@ -18,4 +18,12 @@ public final class RendererHolder {
         if (renderer == null && context != null) renderer = new EntityRenderer(context);
         return renderer;
     }
+
+    /** The entity is gone: its animation state is not needed any more */
+    public static void forget(int entityId) {
+        if (renderer != null) renderer.getAnimatable().forget(entityId);
+    }
+    public static void forgetAll() {
+        if (renderer != null) renderer.getAnimatable().forgetAll();
+    }
 }

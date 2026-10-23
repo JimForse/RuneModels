@@ -2,19 +2,21 @@ package rw.modden.client.render;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
 import rw.modden.client.api.ClientApi;
 import rw.modden.profile.AnimationSets;
 import rw.modden.profile.Profile;
 import software.bernie.geckolib.animatable.GeoReplacedEntity;
 import software.bernie.geckolib.constant.DataTickets;
+import software.bernie.geckolib.core.animatable.GeoAnimatable;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animatable.instance.SingletonAnimatableInstanceCache;
 import software.bernie.geckolib.core.animation.AnimatableManager;
 import software.bernie.geckolib.core.animation.Animation;
 import software.bernie.geckolib.core.animation.AnimationController;
 import software.bernie.geckolib.core.animation.RawAnimation;
 import software.bernie.geckolib.core.keyframe.BoneAnimation;
 import software.bernie.geckolib.core.object.PlayState;
-import software.bernie.geckolib.util.GeckoLibUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,7 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 public class Animatable implements GeoReplacedEntity {
-    private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
+    private final Cache cache = new Cache(this);
     private final GeoModel model;
 
     public Animatable(GeoModel model) {
@@ -66,14 +68,23 @@ public class Animatable implements GeoReplacedEntity {
             }
 
             Profile profile = ClientProfiles.getUsable(id);
-            List<String> situations = !state.isMoving()?List.of("idle")
-                    :(entity.isSprinting()?List.of("run", "walk")
-                    :List.of("walk"));
+            List<String> situations = situations(entity, state.isMoving());
 
             String anim = pick(profile, situations, id);
             if (anim == null) return PlayState.STOP;
             return state.setAndContinue(RawAnimation.begin().thenPlay(anim));
         }));
+    }
+
+    private static List<String> situations(Entity entity, boolean moving) {
+        if (entity instanceof LivingEntity living) {
+            if (living.isFallFlying()) return List.of("fly");
+            if (living.isSleeping()) return List.of("sleep");
+        }
+        if (entity.isInSwimmingPose()) return List.of("swim");
+        if (entity.hasVehicle()) return List.of("ride");
+        if (!moving) return List.of("idle");
+        return entity.isSprinting()?List.of("run", "walk"):List.of("walk");
     }
 
     private String pick(Profile profile, List<String> situations, int seed) {
@@ -109,7 +120,7 @@ public class Animatable implements GeoReplacedEntity {
     }
     /** Names of the bones moved by the custom animation playing on this entity right now (empty if none) */
     public Set<String> animatedBones(long instanceId) {
-        AnimationController<?> controller = cache.getManagerForId(instanceId).getAnimationControllers().get("main");
+        AnimationController<?> controller = getAnimatableInstanceCache().<Animatable>getManagerForId(instanceId).getAnimationControllers().get("main");
         if (controller == null || controller.getAnimationState() == AnimationController.State.STOPPED
                 || controller.getCurrentAnimation() == null) return Set.of();
         Set<String> names = new HashSet<>();
@@ -119,5 +130,18 @@ public class Animatable implements GeoReplacedEntity {
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
+    }
+
+    /** Drops the animation state of an entity that is gone (GeckoLib itself never does it) */
+    public void forget(long instanceId) { cache.forget(instanceId); }
+    public void forgetAll() { cache.forgetAll(); }
+
+    /** GeckoLib's per-entity animation state, which can also forget entities */
+    private static final class Cache extends SingletonAnimatableInstanceCache {
+        private Cache(GeoAnimatable animatable) {
+            super(animatable);
+        }
+        private void forget(long instanceId) { managers.remove(instanceId); }
+        private void forgetAll() { managers.clear(); }
     }
 }

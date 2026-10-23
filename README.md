@@ -11,6 +11,8 @@ For a name `name`, the mod looks for:
 
 Names from other mods are written as `mymod:name` (in commands - in quotes: `"mymod:name"`).
 
+To give a model to ALL entities of one type, name the files after the entity type: for `minecraft:pig` - `geo/pig.geo.json`, `textures/entity/pig.png` and, if needed, `animations/pig.animation.json` in `runemodels/assets/minecraft/`. An entity with its own model (from a command or tag) keeps its own, and entities that another mod already draws with GeckoLib keep that mod's model. These files are used only by the client that has them: everyone sees their own.
+
 ## Commands
 This mod includes the following server commands:
 1. /runemodels set 'targets' 'name'                      (texture + model, if it exists, + animations, by one name)
@@ -28,8 +30,12 @@ And one client command:
 `set` and `texture` keep the animation set already given to the entity; `clear` removes everything.
 The commands only write entity tags (`runemodels.<name>`, `runemodels.model.<x>`, `runemodels.texture.<y>`, `runemodels.set.<s>`), so the same tags can also be given with `/tag`.
 
+## Servers
+The mod also works on servers without it: then you only see your own files (for example, models by entity type). A server that has the mod needs GeckoLib too.
+If the server has the mod, it decides which entities get which model (with commands or tags), and every player with the mod sees it. The model files themselves are not sent by the mod: put all of them into one server resource pack (`resource-pack=` in `server.properties`), in the same `assets/<namespace>/geo`, `animations` and `textures/entity` folders. Players can turn the pack off like any other.
+
 ## Animations
-- With `set 'name'` the model plays the animations of its own file by their names: `idle` (or `idle_1`, `idle_...`) while standing, `walk` (`walk_...`) while walking, `run` (`run_...`) while sprinting.
+- With `set 'name'` the model plays the animations of its own file by their names: `idle` (or `idle_1`, `idle_...`) while standing, `walk` (`walk_...`) while walking, `run` (`run_...`) while sprinting; `fly`, `swim`, `ride` and `sleep` while flying with elytra, swimming or crawling, riding and sleeping (without them, vanilla poses are used there).
 - An animation set from `runemodels/animation_sets.json` (command `animlist set`) replaces this choice:
   `{ "animation_sets": { "my_set": { "idle": ["idle", "idle_1"], "walk": ["walk"], "run": ["run"] } } }`
 - Everything a custom animation does not move is moved by vanilla Minecraft animations (walking, looking around, sneaking, attacking, shield, bow...). Vanilla actions (attack, shield, bow, crossbow) always win on the arms that do them.
